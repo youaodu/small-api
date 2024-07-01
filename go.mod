@@ -1,4 +1,4 @@
-module small-api
+module small-api-v2
 
 go 1.21
 
