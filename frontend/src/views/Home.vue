@@ -68,7 +68,34 @@
         </div>
       </el-col>
       <el-col :xs="18" :sm="18" :md="18" :lg="18" :xl="19">
-        <div class="container-aa">22</div>
+        <div class="container-right">
+          <div class="search-container">
+            <el-input
+              placeholder="请输入搜索关键词"
+              prefix-icon="el-icon-search"
+              v-model="searchText"
+            ></el-input>
+            <el-button type="primary" @click="handleSearch">搜索</el-button>
+          </div>
+          <button @click="toggleDisplayStyle">切换展示样式</button>
+          <div
+            :class="{
+              'list-view': displayStyle === 'list',
+              'table-view': displayStyle === 'table',
+            }"
+          >
+            <div
+              v-for="(item, index) in items"
+              :key="index"
+              :class="{
+                'list-item': displayStyle === 'list',
+                'table-cell': displayStyle === 'table',
+              }"
+            >
+              {{ item }}
+            </div>
+          </div>
+        </div>
       </el-col>
     </el-row>
   </div>
@@ -81,6 +108,7 @@ let state = reactive({
   activeMenuIndex: 0,
   selectedIndex: -1,
   visible: false,
+  searchText: "",
 });
 
 const menuItems = ref([
@@ -99,7 +127,14 @@ const menuItems = ref([
   // 可以继续添加更多菜单项
 ]);
 
-const { activeMenuIndex, selectedIndex, visible } = toRefs(state);
+const { activeMenuIndex, selectedIndex, visible, searchText } = toRefs(state);
+
+const items = ["Item 1", "Item 2", "Item 3", "Item 4", "Item 5", "Item 6"];
+const displayStyle = ref("list"); // 默认为列表样式
+
+const toggleDisplayStyle = () => {
+  displayStyle.value = displayStyle.value === "list" ? "table" : "list";
+};
 
 //一级菜单选择
 const handleMune = (index) => {
@@ -114,6 +149,12 @@ const handleSelect = (index) => {
 // 新增/管理分组
 const handleManageGroup = () => {
   visible.value = true;
+};
+
+const handleSearch = () => {
+  // 在这里处理搜索逻辑
+  console.log("搜索关键词:", searchText.value);
+  // 执行搜索操作...
 };
 </script>
 <style lang="scss" scoped>
@@ -259,7 +300,60 @@ const handleManageGroup = () => {
     }
   }
 }
-.container-aa {
+
+.search-container {
+  display: flex;
+  align-items: center;
+  border-radius: 40px;
+  padding: 8px;
+  background-color: $bs_white_bgColor;
+
+  .el-input {
+    width: 100%;
+    margin-right: 10px;
+  }
+
+  .el-button {
+    height: 32px;
+  }
+}
+
+.container-right {
   height: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+  background-color: $bs_extra_light_gary;
+
+  .list-view {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .table-view {
+    display: flex;
+    flex-wrap: wrap; /* 允许换行 */
+    gap: 10px; /* 间距，可根据需要调整 */
+  }
+
+  .list-item {
+    border: $bs_light_gray solid 1px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    background-color: $bs_white_bgColor;
+    padding: 10px;
+    box-sizing: border-box;
+  }
+
+  .table-cell {
+    flex: 0 0 calc(33.3333% - 10px); /* 占据1/3空间减去间距，保证换行时对齐 */
+    min-width: 100px; /* 设置最小宽度，防止正方形过小 */
+    aspect-ratio: 1 / 1; /* 维持宽高比为1:1 */
+    border: $bs_light_gray solid 1px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    background-color: $bs_white_bgColor;
+    padding: 10px;
+    box-sizing: border-box;
+  }
 }
 </style>
