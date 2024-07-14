@@ -1,10 +1,10 @@
-import { defineConfig } from "vite";
-import vue from "@vitejs/plugin-vue";
-import AutoImport from "unplugin-auto-import/vite";
-import Components from "unplugin-vue-components/vite";
-import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
-import Icons from "unplugin-icons/vite";
-import IconsResolver from "unplugin-icons/resolver";
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import AutoImport from 'unplugin-auto-import/vite'
+import Components from 'unplugin-vue-components/vite'
+import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
+import Icons from 'unplugin-icons/vite'
+import IconsResolver from 'unplugin-icons/resolver'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -13,7 +13,7 @@ export default defineConfig({
     AutoImport({
       resolvers: [
         IconsResolver({
-          prefix: "Icon", // 添加图标解析器
+          prefix: 'Icon', // 添加图标解析器
         }),
         ElementPlusResolver(),
       ],
@@ -22,9 +22,9 @@ export default defineConfig({
       // 配置Element Plus采用saas样式配色系统
       resolvers: [
         IconsResolver({
-          enabledCollections: ["ep"], // 允许使用Element Plus图标集
+          enabledCollections: ['ep'], // 允许使用Element Plus图标集
         }),
-        ElementPlusResolver({ importStyle: "sass" }),
+        ElementPlusResolver({ importStyle: 'sass' }),
       ],
     }),
     // 配置Icons插件以支持图标自动安装
@@ -34,10 +34,11 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      "@": "/src", // 这里将 @ 设置为 src 目录的别名
-      "@components": "/src/components", // 也可以为特定的子目录设置别名
+      '@': '/src', // 这里将 @ 设置为 src 目录的别名
+      '@components': '/src/components', // 也可以为特定的子目录设置别名
       // 更多别名...
     },
+    extensions: ['.mjs', '.js', '.json'],
   },
   css: {
     preprocessorOptions: {
@@ -49,4 +50,10 @@ export default defineConfig({
       },
     },
   },
-});
+  server: {
+    hmr: {
+      host: 'localhost',
+      protocol: 'ws',
+    },
+  },
+})

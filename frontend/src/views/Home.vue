@@ -1,66 +1,54 @@
 <template>
   <div class="page-home flex-full">
-    <el-dialog v-model="visible" :show-close="false" width="500">
-      <template #header="{ close, titleId }">
-        <div class="my-header">
-          <div :id="titleId" :class="titleClass">项目分组管理</div>
-          <div class="right">
-            <el-button class="btn-add" type="primary" :icon="Plus">
-              新增项目
-            </el-button>
-            <el-icon :size="20" @click="close">
-              <i-ep-close />
-            </el-icon>
+    <dailog v-model="addGroupDialogVisible" title="项目分组管理" width="80%" confirmButtonText="确定" cancelButtonText="取消"
+      @confirm="handleConfirm" @cancel="handleCancel">
+      <template #header-right>
+        <el-button class="btn-add" type="primary" :icon="Plus" @click="showDialog">
+          新增项目
+        </el-button>
+      </template>
+      <div class="dailog-content">
+        <div class="dailog-content-title">
+          按住可以拖动顺序
+        </div>
+        <!-- 列表 -->
+        <VueDraggable ref="el" v-model="items">
+          <div class="case-item" v-for="(item, index) in items" :key="index">
+            <div class="case-item-title">{{ `分组${index + 1}` }}</div>
+            <div class="group-btn">
+              <el-button link type="warning" @click="() => handleDelete(index)">删除</el-button>
+              <el-button link type="primary" @click="() => handleDelete(index)">编辑</el-button>
+            </div>
           </div>
-        </div>
-      </template>
-      This is dialog content.
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button @click="dialogVisible = false">Cancel</el-button>
-          <el-button type="primary" @click="dialogVisible = false">
-            Confirm
-          </el-button>
-        </div>
-      </template>
-    </el-dialog>
+        </VueDraggable>
+      </div>
+    </dailog>
+    <dailog v-model="editGroupDialogVisible" title="新建/编辑分组" width="80%" confirmButtonText="确定" cancelButtonText="取消">
+      <p>新增组</p>
+    </dailog>
+
     <el-row class="full-height-row">
       <el-col :xs="6" :sm="6" :md="6" :lg="6" :xl="6">
         <div class="container">
           <div class="menu">
-            <div
-              class="menu-item menu-button"
-              v-for="(item, index) in ['所有项目', '星标项目']"
-              :key="'menu' + index"
-              @click="() => handleMune(index)"
-            >
-              <div
-                class="menu-item-icon"
-                :class="index == activeMenuIndex && 'is-active'"
-              />
-              <div>{{ item }}</div>
+            <div class="menu-item menu-button"
+              v-for="(item, index) in   [{ name: '所有项目', icon: 'icon-suoyou' }, { name: '星标项目', icon: 'icon-shoucang' }]  "
+              :key="'menu' + index" @click="() => handleMune(index)">
+              <i class="iconfont menu-item-icon" :class="[item.icon, { 'is-active': index == activeMenuIndex }]"></i>
+              <div>{{ item.name }}</div>
             </div>
           </div>
           <div class="left-menu">
             <div class="add-group">
               <div class="add-group-name">分组</div>
-              <el-tooltip
-                class="box-item"
-                effect="dark"
-                content="添加分组/管理分组"
-                placement="top"
-              >
+              <el-tooltip class="box-item" effect="dark" content="添加分组/管理分组" placement="top">
                 <div class="add-group-new" @click="handleManageGroup()">+</div>
               </el-tooltip>
             </div>
             <ul>
-              <li
-                v-for="(menuItem, index) in menuItems"
-                :key="'select-item' + index"
-                :class="{ active: selectedIndex === index }"
-                @click="handleSelect(index)"
-              >
-                <div class="icon" />
+              <li v-for="(  menuItem, index  ) in menuItems  " :key="'select-item' + index"
+                :class="{ active: selectedIndex === index }" @click="handleSelect(index)">
+                <i class="iconfont icon-list2f icon"></i>
                 {{ menuItem.title }}
               </li>
             </ul>
@@ -70,45 +58,66 @@
       <el-col :xs="18" :sm="18" :md="18" :lg="18" :xl="19">
         <div class="container-right">
           <div class="search-container">
-            <el-input
-              placeholder="请输入搜索关键词"
-              prefix-icon="el-icon-search"
-              v-model="searchText"
-            ></el-input>
-            <el-button type="primary" @click="handleSearch">搜索</el-button>
+            <el-input placeholder="请输入搜索关键词" @keyup.enter.native="handleSearch" v-model="searchText"></el-input>
+            <el-icon class="el-icon--right" @click="handleSearch" :size="22">
+              <i-ep-search />
+            </el-icon>
           </div>
-          <button @click="toggleDisplayStyle">切换展示样式</button>
-          <div
-            :class="{
-              'list-view': displayStyle === 'list',
-              'table-view': displayStyle === 'table',
-            }"
-          >
-            <div
-              v-for="(item, index) in items"
-              :key="index"
-              :class="{
-                'list-item': displayStyle === 'list',
-                'table-cell': displayStyle === 'table',
-              }"
-            >
+          <div class="tab">
+            <div class="tab-name">
+              {{ ['所有项目', '星标项目'][activeMenuIndex] }}
+            </div>
+            <div class="toggle-change">
+              <div class="toggle-change-item" @click="toggleDisplayStyle" :class="{
+                'active': displayStyle === 'list',
+              }
+                ">
+                <i class="iconfont icon-list2f"></i>
+              </div>
+              <div class="toggle-change-item" @click="toggleDisplayStyle" :class="{
+                'active': displayStyle === 'table',
+              }
+                ">
+                <i class="iconfont icon-grid"></i>
+              </div>
+            </div>
+          </div>
+          <div :class="{
+            'list-view': displayStyle === 'list',
+            'table-view': displayStyle === 'table',
+          }
+            ">
+            <div v-for="(  item, index  ) in   items  " :key="index" :class="{
+              'list-item': displayStyle === 'list',
+              'table-cell': displayStyle === 'table',
+            }
+              ">
               {{ item }}
             </div>
           </div>
+          <el-button type="primary" @click="addGroupDialogVisible = true">
+            新建项目
+          </el-button>
         </div>
       </el-col>
     </el-row>
   </div>
 </template>
 <script setup>
-import { reactive, ref, toRefs } from "vue";
-import { Plus } from "@element-plus/icons-vue";
+import { nextTick, onMounted, reactive, ref, toRefs } from "vue";
+import { List, Plus } from "@element-plus/icons-vue";
+import { VueDraggable } from 'vue-draggable-plus';
+import dailog from "@/components/common/Dialog.vue";
 
 let state = reactive({
   activeMenuIndex: 0,
   selectedIndex: -1,
-  visible: false,
+  addGroupDialogVisible: false,
   searchText: "",
+  editGroupDialogVisible: false,
+  // 新增组
+  displayStyle: "list",
+  // 默认为列表样式
 });
 
 const menuItems = ref([
@@ -127,14 +136,10 @@ const menuItems = ref([
   // 可以继续添加更多菜单项
 ]);
 
-const { activeMenuIndex, selectedIndex, visible, searchText } = toRefs(state);
+const { activeMenuIndex, selectedIndex, addGroupDialogVisible, searchText, editGroupDialogVisible, displayStyle } = toRefs(state);
 
-const items = ["Item 1", "Item 2", "Item 3", "Item 4", "Item 5", "Item 6"];
-const displayStyle = ref("list"); // 默认为列表样式
-
-const toggleDisplayStyle = () => {
-  displayStyle.value = displayStyle.value === "list" ? "table" : "list";
-};
+const items = ref(["Item 1", "Item 2", "Item 3", "Item 4", "Item 5", "Item 6"]);
+const el = ref();
 
 //一级菜单选择
 const handleMune = (index) => {
@@ -148,7 +153,7 @@ const handleSelect = (index) => {
 
 // 新增/管理分组
 const handleManageGroup = () => {
-  visible.value = true;
+  addGroupDialogVisible.value = true;
 };
 
 const handleSearch = () => {
@@ -156,6 +161,24 @@ const handleSearch = () => {
   console.log("搜索关键词:", searchText.value);
   // 执行搜索操作...
 };
+
+const handleConfirm = () => {
+  console.log('确实');
+};
+
+const handleCancel = () => {
+  console.log('取消');
+};
+
+//新增组
+const showDialog = () => {
+  editGroupDialogVisible.value = true;
+};
+
+// 切换列表
+const toggleDisplayStyle = () => {
+  displayStyle.value = displayStyle.value === "list" ? "table" : "list";
+}
 </script>
 <style lang="scss" scoped>
 .page-home {
@@ -166,6 +189,7 @@ const handleSearch = () => {
   display: flex;
   height: 100%;
 }
+
 .container {
   height: 100%;
   display: flex;
@@ -190,12 +214,10 @@ const handleSearch = () => {
 
     &-icon {
       margin-top: 8px;
-      width: 16px;
-      height: 16px;
-      background-color: #fff;
     }
+
     &-icon.is-active {
-      background-color: $bs_primary_color; // 选中时的背景色
+      color: $bs_primary_color; // 选中时的背景色
     }
   }
 
@@ -261,25 +283,26 @@ const handleSearch = () => {
     color: $bs-font-text;
 
     .icon {
-      background-color: #ffffff;
-      width: 16px;
-      height: 16px;
       margin-right: 12px;
     }
   }
 
   li:hover {
-    color: $bs_primary_color; /* 维持文本颜色不变 */
+    color: $bs_primary_color;
+
+    /* 维持文本颜色不变 */
     .icon {
-      background-color: $bs_primary_color;
+      color: $bs_primary_color;
     }
   }
+
   li.active {
     background-color: $bs_fog_blue_color;
-    color: $bs_primary_color; /* 示例中的激活颜色 */
+    color: $bs_primary_color;
+    /* 示例中的激活颜色 */
 
     .icon {
-      background-color: $bs_primary_color;
+      color: $bs_primary_color;
     }
   }
 }
@@ -293,6 +316,7 @@ const handleSearch = () => {
   .right {
     display: flex;
     align-items: center;
+
     .btn-add {
       margin-right: 8px;
       flex-shrink: 0;
@@ -305,7 +329,7 @@ const handleSearch = () => {
   display: flex;
   align-items: center;
   border-radius: 40px;
-  padding: 8px;
+  padding: 8px 11px;
   background-color: $bs_white_bgColor;
 
   .el-input {
@@ -324,6 +348,39 @@ const handleSearch = () => {
   box-sizing: border-box;
   background-color: $bs_extra_light_gary;
 
+  .tab {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 12px 0 8px 0;
+
+    &-name {
+      font-size: $bs-font-title;
+      color: $bs-font-text;
+      font-weight: 500;
+    }
+
+    .toggle-change {
+      display: flex;
+      border: $bs_primary_color solid 2px;
+      border-radius: 4px;
+
+      &-item {
+        height: 26px;
+        width: 26px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: $bs_primary_color;
+      }
+
+      .active {
+        background-color: $bs_primary_color;
+        color: #fff;
+      }
+    }
+  }
+
   .list-view {
     display: flex;
     flex-direction: column;
@@ -331,8 +388,10 @@ const handleSearch = () => {
 
   .table-view {
     display: flex;
-    flex-wrap: wrap; /* 允许换行 */
-    gap: 10px; /* 间距，可根据需要调整 */
+    flex-wrap: wrap;
+    /* 允许换行 */
+    gap: 10px;
+    /* 间距，可根据需要调整 */
   }
 
   .list-item {
@@ -345,15 +404,56 @@ const handleSearch = () => {
   }
 
   .table-cell {
-    flex: 0 0 calc(33.3333% - 10px); /* 占据1/3空间减去间距，保证换行时对齐 */
-    min-width: 100px; /* 设置最小宽度，防止正方形过小 */
-    aspect-ratio: 1 / 1; /* 维持宽高比为1:1 */
+    flex: 0 0 calc(33.3333% - 10px);
+    /* 占据1/3空间减去间距，保证换行时对齐 */
+    min-width: 100px;
+    /* 设置最小宽度，防止正方形过小 */
+    aspect-ratio: 1 / 1;
+    /* 维持宽高比为1:1 */
     border: $bs_light_gray solid 1px;
     border-radius: 4px;
     margin-bottom: 10px;
     background-color: $bs_white_bgColor;
     padding: 10px;
     box-sizing: border-box;
+  }
+}
+
+.search-container {
+  ::v-deep(.el-input) {
+    margin-right: 0px;
+  }
+
+  ::v-deep(.el-input__wrapper) {
+    box-shadow: none;
+    padding: 0px;
+  }
+
+  ::v-deep(.el-input__wrapper:hover) {
+    box-shadow: none;
+  }
+}
+
+.dailog-content {
+  width: 100%;
+
+  .case-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px;
+    background-color: $bs_defalut_bg;
+    border-bottom: $bs_extra_light_gary solid 1px;
+  }
+
+  .case-item:last-child {
+    border: none;
+  }
+
+  &-title {
+    text-align: left;
+    width: 100%;
+    font-size: $bs_small_font_size;
+    color: $bs-font-text;
   }
 }
 </style>
